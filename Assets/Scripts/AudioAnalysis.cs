@@ -5,6 +5,7 @@ public class AudioAnalysis : MonoBehaviour {
 	private const float CAP_HEIGHT = 0.03f;
 	private const float DECAY_RATE = 0.001f;
 	private const float BAR_SCALE = 50;
+	private const float DIR_DECAY = 0.001f;
 
 	private AudioSource source;
 	private float[] freqData;
@@ -12,6 +13,7 @@ public class AudioAnalysis : MonoBehaviour {
 	private float[] buffer;
 	private float wubPower;
 	private float wubDir;
+	private float bigWub;
 
 	private GameObject[] bars;
 	private GameObject[] caps;
@@ -21,6 +23,7 @@ public class AudioAnalysis : MonoBehaviour {
 		source = GetComponent<AudioSource>();
 		
 		wubPower = 0;
+		bigWub = 0;
 		wubDir = 1;
 
 		freqData = new float[8192];
@@ -73,17 +76,24 @@ public class AudioAnalysis : MonoBehaviour {
 			pos = caps[i].transform.position;
 			caps[i].transform.position = new Vector3(pos.x, (newY *2) + CAP_HEIGHT, pos.z);
 
-			wubPower += (band[i]);
+			wubPower += (band[i]) * (Mathf.Pow (i,2));
 
 			dubString += i + " " + band[i] + " | ";
 
 			band[i] = 0;
 			buffer[i] = Mathf.Max (buffer[i]-DECAY_RATE,0);
 		}
+		if(wubPower > bigWub)
+		{
+			bigWub = wubPower;
+			wubDir *= -1;
+		}else{
+			bigWub -= DECAY_RATE;
+		}
 		wubPower *= wubDir;
 		camera.transform.Rotate(0,0,wubPower);
 
-		Debug.Log (dubString + "WubPower: " + wubPower);
+		Debug.Log (dubString + "WubPower: " + wubPower + " | BigWub: " + bigWub);
 
 		wubPower = 0;
 	}
